@@ -60,3 +60,5 @@ jobs:
         run: |
           sudo /usr/local/bin/generera_landningssida.sh || echo "Varning: kunde inte regenerera landningssidan (ej kritiskt fel)"
 
+
+# (touch för workflow-registrering)
