@@ -1,8 +1,280 @@
-/* ============================================================
-   app.css
-   App-specifik styling för cykelpotential.
-   Laddas EFTER regiondalarna_ruf.css så att lokala regler
-   kan överstyra den delade identiteten vid behov.
-   ============================================================ */
+/* =============================================================
+   karta-layout.css  –  Cykelpotential Dalarna
+   Layout: innehåll och karta sida vid sida, båda scrollar normalt
+   (läggs i www/ och länkas i ui.R efter app.css)
+   ============================================================= */
+    :root {
+      --rd-header-hojd: 60px;
+      --kart-bredd: 50%;        /* kartans bredd av raden */
+      --kart-hojd: 800px;       /* kartans höjd */
+    }
 
-/* Lägg appspecifika regler här. */
+    /* ---- Header fyller ut hela skärmen -------------------------------- */
+    .rd-header {
+      width: 100vw;
+      position: relative;
+      left: 50%;
+      right: 50%;
+      margin-left: -50vw;
+      margin-right: -50vw;
+    }
+
+
+    /* ---- Rad: innehåll + karta sida vid sida -------------------------- */
+    #rd-content-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-left:  calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+      margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+    }
+
+    #rd-tabs-wrapper {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-left: 24px;
+    }
+
+    #global_map_wrapper {
+      flex: 0 0 var(--kart-bredd);
+      width: var(--kart-bredd);
+    }
+
+    /* ---- Delad karta: normal box, scrollar med sidan ------------------ */
+    #global_map_container {
+      position: relative;
+      width: 100%;
+      height: var(--kart-hojd);
+      z-index: 500;
+      background: #e9ecef;
+      border-left: 1px solid #d0d0d0;
+    }
+
+    #global_map_container .leaflet-container,
+    #global_map_container .html-widget {
+      height: 100% !important;
+      width: 100% !important;
+    }
+
+    .leaflet-container {
+      background: white;
+    }
+
+    /* ---- Kontroller ovanpå kartan -------------------------------------- */
+    .map-expand-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      background: #fff;
+    }
+
+    .map-controls-panel {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      padding: 6px;
+      width: 150px;
+      font-size: 12px;
+      margin: 2px;
+    }
+
+    .plot-container-cykelklass {
+      width: calc(100% - 10px);
+      overflow-y: visible;
+    }
+
+    .plot-container-cykelklass .card,
+    .plot-container-cykelklass .bslib-full-screen-enter {
+      contain: none !important;
+      container-type: normal !important;
+    }
+
+    /* ---- Tooltip fastnar ---------------- */
+    .girafe_container_std {
+      position: relative !important;
+    }
+
+    .card-body {
+      overflow: visible !important;
+    }
+
+    /* ---- Maximera karta: blir overlay tillfälligt ---------------------- */
+    body.karta-maximerad #global_map_container {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+    }
+
+    body.utan-karta #global_map_wrapper {
+      display: none;
+    }
+
+    body.karta-maximerad #rd-tabs-wrapper,
+    body.karta-maximerad .rd-header,
+    body.karta-maximerad .rd-footer {
+      display: none;
+    }
+
+    /* ---- Startsida ---- */
+    #start_hero {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 24px 48px;
+    }
+
+    #start_hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--rd-primary);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    #start_hero .lead-in {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #333;
+      border-left: 4px solid var(--rd-primary);
+      padding-left: 16px;
+      margin-bottom: 28px;
+    }
+
+    #start_hero .text-box {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #444;
+    }
+
+    #start_hero .text-box p {
+      margin-bottom: 16px;
+    }
+
+    #start_hero .accordion {
+      margin: 28px 0;
+    }
+
+    #start_hero .accordion-button:not(.collapsed) {
+      background-color: rgba(23, 133, 113, 0.1);   /* ljus ton av --rd-primary */
+      color: var(--rd-primary);
+      font-weight: 600;
+    }
+
+    #start_hero .accordion-button:focus {
+      box-shadow: 0 0 0 0.2rem rgba(23, 133, 113, 0.25);
+    }
+
+    #start_hero .source-note {
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    #start_hero .bslib-value-box {
+      margin-bottom: 32px;
+    }
+
+    #start_hero .bslib-value-box .value-box-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    #start_hero .bslib-value-box .value-box-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+    }
+    /* ---- Om-sida (samma designspråk som startsidan) --------------------- */
+    #om_hero {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 24px 48px;
+    }
+
+    #om_hero h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--rd-primary);
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+
+    #om_hero h2:first-child {
+      margin-top: 0;
+    }
+
+    #om_hero .lead-in {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #333;
+      border-left: 4px solid var(--rd-primary);
+      padding-left: 16px;
+      margin-bottom: 20px;
+    }
+
+    #om_hero .text-box {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #444;
+    }
+
+    #om_hero .text-box p {
+      margin-bottom: 16px;
+    }
+
+    #om_hero .om-lista {
+      margin: 4px 0 20px 0;
+      padding-left: 20px;
+    }
+
+    #om_hero .om-lista li {
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .card-footer .alert-info {
+      background-color: var(--rd-accent-soft);
+      border-color: var(--rd-accent-soft);
+      color: #333;
+    }
+
+    /* spinner.css – global laddningsindikator */
+
+    .app-spinner-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 99999;
+      background: rgba(255, 255, 255, 0.6);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-spinner-overlay.show {
+      display: flex;
+    }
+
+    .app-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #ddd;
+      border-top-color: #178571;
+      border-radius: 50%;
+      animation: app-spin 0.8s linear infinite;
+    }
+
+    @keyframes app-spin {
+      to { transform: rotate(360deg); }
+    }
