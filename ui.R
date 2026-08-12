@@ -395,8 +395,8 @@ shinyUI(
           c(
             list(id = "nav"),
             list(start_panel_ui()),
-            bygg_nav_menyer(panel_konfig),
-            list(om_panel_ui())
+            bygg_nav_menyer(panel_konfig)
+            # list(om_panel_ui())
           )
         )
       ),
