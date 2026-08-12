@@ -12,6 +12,8 @@ library(readr)
 library(ggplot2)
 library(leaflet)
 
+source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_shinyappar.R", encoding = "utf-8", echo = FALSE)
+
 # Allmänna options - TRUE = visa inte R-felmeddelanden i appen, FALSE = visa felmeddelanden från R på webben
 options(shiny.sanitize.errors = FALSE)
 # shinyOptions(cache = cachem::cache_disk(
@@ -102,22 +104,52 @@ arbete_nvdb_stat <- tbl(
   dplyr::collect()
 
 #----Hämta geografiska gränser----
-kommuner <- hamta_kommunkoder()$region
+con <- shiny_uppkoppling_las("geodata")
 
-kommungranser <- hamta_karta(regionkoder = 20) %>%
-  sf::st_transform(4326) %>%
-  sf::st_zm(drop = TRUE, what = "ZM")
+# Kommungränser
+kommungranser <- tbl(
+  con,
+  dbplyr::in_schema("karta", "kommun_scb")
+) %>%
+  filter(lanskod_tx == "20") %>%
+  collect() %>%
+  df_till_sf() %>%
+  st_transform(4326) %>%
+  st_zm(drop = TRUE, what = "ZM")
 
-kommungranser_lm <- hamta_karta("kommun_lm", regionkoder = 20) %>%
-  sf::st_transform(4326) %>%
-  sf::st_zm(drop = TRUE, what = "ZM")
+# Lantmäteriets kommungränser
+kommungranser_lm <- tbl(
+  con,
+  dbplyr::in_schema("karta", "kommun_lm")
+) %>%
+  filter(lankod == "20") %>%
+  collect() %>%
+  df_till_sf(geom_col = "geom") %>%
+  st_transform(4326) %>%
+  st_zm(drop = TRUE, what = "ZM")
 
-deso_niva <- hamta_karta("deso", regionkoder = 20) %>%
-  sf::st_transform(4326) %>%
-  sf::st_zm(drop = TRUE, what = "ZM")
+# DeSO
+deso_niva <- tbl(
+  con,
+  dbplyr::in_schema("karta", "deso")
+) %>%
+  filter(lanskod == "20") %>%
+  collect() %>%
+  df_till_sf() %>%
+  st_transform(4326) %>%
+  st_zm(drop = TRUE, what = "ZM")
 
-lansgrans <- hamta_karta("lan_lm", regionkoder = 20) %>%
-  sf::st_transform(4326) %>%
-  sf::st_zm(drop = TRUE, what = "ZM") %>%
+# Länsgräns
+lansgrans <- tbl(
+  con,
+  dbplyr::in_schema("karta", "lan_lm")
+) %>%
+  filter(lankod == "20") %>%
+  collect() %>%
+  df_till_sf(geom_col = "geom") %>%
+  st_transform(4326) %>%
+  st_zm(drop = TRUE, what = "ZM") %>%
   st_exterior_ring()
+
+DBI::dbDisconnect(con)
 
