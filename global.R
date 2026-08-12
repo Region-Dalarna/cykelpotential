@@ -101,7 +101,7 @@ arbete_nvdb_stat <- tbl(
   ) %>%
   dplyr::collect()
 
-#----Hänta geografiska gränser----
+#----Hämta geografiska gränser----
 kommuner <- hamta_kommunkoder()$region
 
 kommungranser <- hamta_karta(regionkoder = 20) %>%
