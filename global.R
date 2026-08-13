@@ -17,7 +17,7 @@ source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_sh
 # Allmänna options - TRUE = visa inte R-felmeddelanden i appen, FALSE = visa felmeddelanden från R på webben
 options(shiny.sanitize.errors = FALSE)
 # shinyOptions(cache = cachem::cache_disk(
-#   dir      = "C:/sti/till/en/cache-mapp",  # anpassa till din servermiljö
+#   dir      = "C:/sti/till/en/cache-mapp",  # anpassa till  servermiljö
 #   max_size = 500 * 1024^2                   # 500 MB, justera efter behov
 # ))
 
@@ -105,6 +105,14 @@ arbete_nvdb_stat <- tbl(
 
 #----Hämta geografiska gränser----
 con <- shiny_uppkoppling_las("geodata")
+
+# Kommuner
+kommuner <- tbl(
+  con,
+  dbplyr::in_schema("karta", "kommun_scb")
+  ) %>%
+  filter(lanskod_tx == "20") %>%
+  pull(knnamn)
 
 # Kommungränser
 kommungranser <- tbl(
