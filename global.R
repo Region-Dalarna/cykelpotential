@@ -12,6 +12,7 @@ library(readr)
 library(ggplot2)
 library(leaflet)
 library(geojsonsf)
+library(jsonlite)
 
 # ladda in nödvändiga funktioner
 source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_shinyappar.R", encoding = "utf-8", echo = FALSE)
