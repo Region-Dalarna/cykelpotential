@@ -207,7 +207,7 @@ make_kommunkarta <- function(cykel_data, varde_kol, granser, etiketter,
       fillOpacity = 0.7,
       weight      = 0.1,
       # popup       = popup_text,
-      label       = lapply(popup_text, htmltools::HTML),   # <-- NY: hover istället för/utöver popup
+      label       = lapply(popup_text, htmltools::HTML),
       labelOptions = leaflet::labelOptions(
         direction = "auto",
         textsize  = "13px",
@@ -289,7 +289,7 @@ bind_kommunkarta_deso <- function(map_id, cykel_data, deso_niva, input, session,
         weight      = 1,
         color       = "white",
         # popup       = popup_text,
-        label       = lapply(popup_text, htmltools::HTML),   # <-- NY: hover istället för/utöver popup
+        label       = lapply(popup_text, htmltools::HTML),
         labelOptions = leaflet::labelOptions(
           direction = "auto",
           textsize  = "13px",
@@ -324,12 +324,26 @@ shinyServer(function(input, output, session) {
 
   thematic::thematic_shiny()
 
+  karta_forsta_gangen <- reactiveVal(TRUE)
+
   # (Visa/dölj av delade kartan sköts av conditionalPanel i ui.R –
   #  shinyjs-observern är borttagen.)
 
   # ---- Konfiguration för aktiv flik ----
+  # ---- Vilken faktisk tabb_id (underflik) som är aktiv just nu ----
+  aktuell_tabb_id <- reactive({
+    req(input$nav)
+    if (input$nav %in% c("start", "om")) return(NULL)
+
+    inner_id <- inre_flik_id(input$nav)
+    req(input[[inner_id]])
+    input[[inner_id]]
+  })
+
+  # ---- Konfiguration för aktiv flik ----
   aktuell_konfig <- reactive({
-    tabb_konfig %>% filter(tabb_id == input$nav)
+    req(aktuell_tabb_id())
+    tabb_konfig %>% filter(tabb_id == aktuell_tabb_id())
   })
 
   aktuellt_val <- reactive({
@@ -338,73 +352,24 @@ shinyServer(function(input, output, session) {
   })
 
   # ---- Kartdata för delad karta ----
+  # ---- Läs förberäknad GeoJSON från cache, ingen beräkning i appen längre ----
   karta_data <- reactive({
-    req(input$nav, aktuell_konfig(), aktuellt_val())
+    req(aktuell_tabb_id(), aktuellt_val())
 
-    konfig <- aktuell_konfig()
-    req(nrow(konfig) > 0)
+    rad <- dbGetQuery(con_rutt, "
+      SELECT geojson, antal_segment, lank_ids
+      FROM app_cache.geojson_cache
+      WHERE tabb_id = $1 AND rutter_val = $2;
+    ", params = list(aktuell_tabb_id(), aktuellt_val()))
 
-    typ <- konfig$typ[1]
-    val <- aktuellt_val()
+    req(nrow(rad) > 0)
 
-    prefix <- if (grepl("elcykel", typ)) {
-      "pass_elcykel"
-    } else {
-      "pass_cykel"
-    }
-
-    suffix <- if (grepl("_all$", input$nav)) {
-      "nvdb"
-    } else {
-      "cykelklass"
-    }
-
-    typ_bas <- sub("_all$", "", typ)
-    typ_bas <- sub("^arbete_elcykel$", "arbete", typ_bas)
-
-    pass_kol <- paste0(
-      prefix,
-      "_",
-      val,
-      "_",
-      typ_bas,
-      "_",
-      suffix
+    list(
+      geojson  = rad$geojson[1],
+      n        = rad$antal_segment[1],
+      lank_ids = strsplit(rad$lank_ids[1], ",")[[1]]
     )
-    message(
-      "=== karta_data === nav:", input$nav,
-      " typ:", typ,
-      " val:", val,
-      " kol:", pass_kol,
-      " finns:", pass_kol %in% names(alla_rutter)
-    )
-
-    if (!(pass_kol %in% names(alla_rutter))) {
-      print(sort(names(alla_rutter)))
-    }
-
-
-    req(pass_kol %in% names(alla_rutter))
-
-    df   <- alla_rutter %>% filter(!is.na(.data[[pass_kol]]), .data[[pass_kol]] > 0)
-    vals <- as.numeric(df[[pass_kol]])
-
-    pal <- colorNumeric(
-      palette = viridis::viridis(10, option = "plasma", direction = -1),
-      domain  = vals
-    )
-
-    df$color_val <- pal(vals)
-    df$pass_val  <- vals
-    df$pal       <- list(pal)
-    # df$popup     <- paste0(
-    #   "<b>Gatunamn:</b> ", df$gatunamn_namn, "<br>",
-    #   "<b>Potentiella passager:</b> ",
-    #   ifelse(vals < 10, "<10", as.character(vals)), "<br>",
-    #   "<b>Streetview:</b> <a href='", df$streetview_url, "' target='_blank'>Google Streetview</a>"
-    # )
-    df
-  }) %>% bindCache(input$nav, aktuellt_val())
+  }) %>% bindCache(aktuell_tabb_id(), aktuellt_val())
 
   # ---- Maximera karta ----
   observeEvent(input$expand_karta, {
@@ -416,84 +381,97 @@ shinyServer(function(input, output, session) {
 
   # ---- Delad karta: basrender ----
   output$delad_karta <- renderLeaflet({
+    pal_legend <- colorNumeric(
+      palette = viridis::viridis(10, option = "plasma", direction = -1),
+      domain  = c(0, 100)
+    )
+
     leaflet() %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
+      addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
       setView(lng = 14.0, lat = 61.5, zoom = 7) %>%
       htmlwidgets::onRender("
-      function(el, x) {
-        var map = this;
-        var settleTimer = null;
+        function(el, x) {
+          var map = this;
+          var settleTimer = null;
+          var clickBound = false;
 
-        function scheduleHide() {
-          clearTimeout(settleTimer);
-          settleTimer = setTimeout(function() {
-            requestAnimationFrame(function() {
+          function scheduleHide() {
+            clearTimeout(settleTimer);
+            settleTimer = setTimeout(function() {
               requestAnimationFrame(function() {
-                doljSpinnerMedGolvtid();
+                requestAnimationFrame(function() {
+                  doljSpinnerEfterMalning();
+                });
               });
-            });
-          }, 50);
-        }
+            }, 300);
+          }
 
-        map.on('layeradd', scheduleHide);
-        map.on('moveend', scheduleHide);
-      }
-    ") %>%
+          map.on('layeradd', function(e) {
+            if (!clickBound && map.layerManager) {
+              var grupp = map.layerManager.getLayerGroup('vagnat');
+              if (grupp) {
+                grupp.on('click', function(ev) {
+                  if (ev.layer && ev.layer.feature) {
+                    var p = ev.layer.feature.properties;
+                    Shiny.setInputValue('delad_karta_shape_click', {
+                      id: p.lank_id, lat: ev.latlng.lat, lng: ev.latlng.lng,
+                      '.nonce': Math.random()
+                    }, { priority: 'event' });
+                  }
+                });
+                clickBound = true;
+              }
+            }
+            scheduleHide();
+          });
+
+          map.on('moveend', scheduleHide);
+        }
+      ") %>%
+      addLegend(pal = pal_legend, values = c(0, 100),
+                position = "bottomright", title = "Antal passager") %>%
       addPolygons(
         data = lansgrans,
-        fillColor = "transparent",
-        fillOpacity = 0,
-        weight = 1,
-        color = "black"
+        fillColor = "transparent", fillOpacity = 0, weight = 1, color = "black",
+        options = pathOptions(interactive = FALSE)
       ) %>%
       addPolygons(
-        data        = kommungranser_lm,
-        group       = "kommuner",
-        layerId     = ~kommunnamn,
-        fillColor   = "transparent",
-        fillOpacity = 0,
-        weight      = 1,
-        color       = "black",
-        options     = pathOptions(interactive = FALSE)
+        data = kommungranser_lm, group = "kommuner", layerId = ~kommunnamn,
+        fillColor = "transparent", fillOpacity = 0, weight = 1, color = "black",
+        options = pathOptions(interactive = FALSE)
       ) %>%
       hideGroup("kommuner")
   })
 
+  # ---- Delad karta: byt bakgrund utan att röra rutter/zoom ----
+  observeEvent(input$basemap_delad, {
+    tiles <- if (isTRUE(input$basemap_delad == "dark")) {
+      providers$Stadia.AlidadeSmoothDark
+    } else {
+      providers$Esri.WorldGrayCanvas
+      }
+
+    leafletProxy("delad_karta") %>%
+      clearTiles() %>%
+      addProviderTiles(tiles)
+  }, ignoreInit = TRUE)
+
   # ---- Delad karta: uppdatera vid flikbyte / val ----
   observe({
     req(karta_data())
-    df   <- karta_data()
-    session$sendCustomMessage("show-spinner", list(n = nrow(df)))
-    pal  <- df$pal[[1]]
-    bbox <- try(sf::st_bbox(df), silent = TRUE)
+    kd <- karta_data()
 
-    tiles <- if (isTRUE(input$basemap_delad == "dark")) {
-      providers$CartoDB.DarkMatter
-    } else {
-      providers$CartoDB.Positron
-    }
+    session$sendCustomMessage("show-spinner", list(n = kd$n))
 
-    proxy <- leafletProxy("delad_karta") %>%
-      clearTiles() %>%
-      addProviderTiles(tiles) %>%
+    leafletProxy("delad_karta") %>%
       clearGroup("vagnat") %>%
       clearControls() %>%
       clearPopups() %>%
-      addPolylines(
-        data    = df,
+      addGeoJSON(
+        geojson = kd$geojson,
         group   = "vagnat",
-        layerId = ~lank_id,
-        color   = ~color_val,
-        weight  = 3,
-        opacity = 1,
-        # popup   = ~popup
-      ) %>%
-      addLegend(pal = pal, values = df$pass_val,
-                position = "bottomright", title = "Antal passager")
-
-    if (!inherits(bbox, "try-error") && !is.null(bbox) && all(is.finite(bbox))) {
-      proxy %>% fitBounds(unname(bbox["xmin"]), unname(bbox["ymin"]), unname(bbox["xmax"]), unname(bbox["ymax"]))
-    }
+        layerId = kd$lank_ids
+      )
   })
 
   # Bygg popup endast för de vägsegment man klickar på.
@@ -501,15 +479,27 @@ shinyServer(function(input, output, session) {
     klick <- input$delad_karta_shape_click
     req(klick$id)
 
-    df  <- karta_data()
-    rad <- df[df$lank_id == klick$id, ]
+    rad <- alla_rutter %>% dplyr::filter(lank_id == klick$id)
     req(nrow(rad) > 0)
 
+    konfig   <- aktuell_konfig()
+    typ      <- konfig$typ[1]
+    val      <- aktuellt_val()
+    tabb_id  <- aktuell_tabb_id()
+
+    prefix   <- if (grepl("elcykel", typ)) "pass_elcykel" else "pass_cykel"
+    suffix   <- if (grepl("_all$", tabb_id)) "nvdb" else "cykelklass"
+    typ_bas  <- sub("_all$", "", typ)
+    typ_bas  <- sub("^arbete_elcykel$", "arbete", typ_bas)
+    pass_kol <- paste0(prefix, "_", val, "_", typ_bas, "_", suffix)
+
+    pass_val <- rad[[pass_kol]][1]
+
     popup_text <- paste0(
-      "<b>Gatunamn:</b> ", rad$gatunamn_namn, "<br>",
+      "<b>Gatunamn:</b> ", rad$gatunamn_namn[1], "<br>",
       "<b>Potentiella passager:</b> ",
-      ifelse(rad$pass_val < 10, "<10", as.character(rad$pass_val)), "<br>",
-      "<b>Streetview:</b> <a href='", rad$streetview_url, "' target='_blank'>Google Streetview</a>"
+      ifelse(pass_val < 10, "<10", as.character(pass_val)), "<br>",
+      "<b>Streetview:</b> <a href='", rad$streetview_url[1], "' target='_blank'>Google Streetview</a>"
     )
 
     leaflet::leafletProxy("delad_karta") %>%
