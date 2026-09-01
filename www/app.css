@@ -278,3 +278,39 @@
     @keyframes app-spin {
       to { transform: rotate(360deg); }
     }
+
+    /* ---- Underflikar (navset_pill): segmenterade knappar ---------------- */
+    .nav-pills {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0 20px 0;
+    }
+
+    .nav-pills .nav-link {
+      background: #fff;
+      color: var(--rd-text-muted, #555);
+      border: 1px solid var(--rd-border, #d0d0d0);
+      border-radius: 6px;
+      padding: 8px 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .nav-pills .nav-link:hover {
+      background: var(--rd-accent-soft);
+      color: var(--rd-primary);
+    }
+
+    body .nav-pills .nav-link.active {
+      background: var(--rd-primary) !important;
+      color: #fff;
+      border-color: var(--rd-primary) !important;
+    }
+
+    /* ---- Radioknappar (Visa rutter, Kartbakgrund m.fl.) i din egen teal-färg ---- */
+    .shiny-input-container .checkbox-inline input:checked,
+    .shiny-input-container .radio input:checked,
+    .shiny-input-container .radio-inline input:checked {
+      background-color: var(--rd-primary) !important;
+      border-color: var(--rd-primary) !important;
+    }

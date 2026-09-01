@@ -11,6 +11,8 @@ library(tidyr)
 library(readr)
 library(ggplot2)
 library(leaflet)
+library(geojsonsf)
+library(jsonlite)
 
 # ladda in nödvändiga funktioner
 source("https://raw.githubusercontent.com/Region-Dalarna/funktioner/main/func_shinyappar.R", encoding = "utf-8", echo = FALSE)
@@ -22,15 +24,41 @@ options(shiny.sanitize.errors = FALSE)
 #   max_size = 500 * 1024^2                   # 500 MB, justera efter behov
 # ))
 
+
+#---- Hjälpfunktion----
+# Bygger ett stabilt, url-säkert id för en underflik-navset baserat på menynamnet
+inre_flik_id <- function(meny) {
+  paste0("underflik_", gsub("[^a-zA-Z0-9]+", "_", tolower(meny)))
+}
+
+
 #----Uppkoppling till databas----
 con_rutt <- shiny_uppkoppling_las("ruttanalyser", db_user = "shiny_las_sekretess")
 
 #----Hämta rutter------
+alla_kolumner_i_vyn <- dbGetQuery(con_rutt, "
+  SELECT a.attname AS column_name
+  FROM pg_attribute a
+  JOIN pg_class c ON a.attrelid = c.oid
+  JOIN pg_namespace n ON c.relnamespace = n.oid
+  WHERE n.nspname = 'ruttanalys_cykel'
+    AND c.relname = 'cykelpotential_vy'
+    AND a.attnum > 0
+    AND NOT a.attisdropped;
+")$column_name
+
+pass_dold_kolumner <- alla_kolumner_i_vyn[grepl("^(pass_|dold_)", alla_kolumner_i_vyn)]
+
 alla_rutter <- sf::st_read(
   con_rutt,
-  layer = DBI::Id(schema = "ruttanalys_cykel", table = "cykelpotential_vy"),
+  query = paste0(
+    "SELECT lank_id, gatunamn_namn, streetview_url, geom, ",
+    paste(pass_dold_kolumner, collapse = ", "),
+    " FROM ruttanalys_cykel.cykelpotential_vy;"
+  ),
   quiet = TRUE
-) %>%
+  ) %>%
+  st_simplify(dTolerance = 5, preserveTopology = TRUE) %>%
   sf::st_transform(4326) %>%
   st_zm(drop = TRUE, what = "ZM")
 
@@ -113,7 +141,7 @@ kommuner <- tbl(
   dbplyr::in_schema("karta", "kommun_scb")
   ) %>%
   filter(lanskod_tx == "20") %>%
-  pull(knnamn)
+  dplyr::pull(knnamn)
 
 # Kommungränser
 kommungranser <- tbl(

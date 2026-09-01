@@ -185,18 +185,21 @@ cykel_panel_ui <- function(cfg) {
 # Hjälpfunktion: bygger nav_menu med tillhörande nav_panels
 # ------------------------------------------------------------------
 bygg_nav_menyer <- function(konfig_lista) {
-  # Gruppera efter menu-namn och bevara ordning
   meny_namn <- unique(sapply(konfig_lista, `[[`, "menu"))
 
   lapply(meny_namn, function(meny) {
     paneler <- Filter(function(k) k$menu == meny, konfig_lista)
-    do.call(
-      bslib::nav_menu,
-      c(list(meny), lapply(paneler, cykel_panel_ui))
+
+    bslib::nav_panel(
+      title = meny,
+      value = meny,
+      bslib::navset_pill(
+        id = inre_flik_id(meny),
+        !!!lapply(paneler, cykel_panel_ui)
+      )
     )
   })
 }
-
 
 # ------------------------------------------------------------------
 # Delad karta (visas på alla flikar utom Start och Om)
@@ -260,6 +263,10 @@ start_panel_ui <- function() {
         )),
         p(paste(
           "Ruttanalyserna utgår från SCB:s data om var befolkningen bor och går i skola eller arbetar."
+        )),
+        p(paste(
+          "Av sekretesskäl visas inte enstaka vägavsnitt med väldigt få resande ",
+          "som leder fram till en enskild start- eller målpunkt."
         )),
       ),
 
