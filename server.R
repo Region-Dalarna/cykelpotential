@@ -445,15 +445,9 @@ shinyServer(function(input, output, session) {
 
   # ---- Delad karta: byt bakgrund utan att röra rutter/zoom ----
   observeEvent(input$basemap_delad, {
-    tiles <- if (isTRUE(input$basemap_delad == "dark")) {
-      providers$Stadia.AlidadeSmoothDark
-    } else {
-      providers$Esri.WorldGrayCanvas
-      }
-
     leafletProxy("delad_karta") %>%
       clearTiles() %>%
-      addProviderTiles(tiles)
+      addProviderTiles(providers$Esri.WorldGrayCanvas)
   }, ignoreInit = TRUE)
 
   # ---- Delad karta: uppdatera vid flikbyte / val ----
@@ -534,8 +528,7 @@ shinyServer(function(input, output, session) {
 
     tagList(
       radioButtons("basemap_delad", "Kartbakgrund",
-                   choices = c("Ljus" = "light", "Mörk" = "dark"),
-                   selected = "light"),
+                   choices = c("Ljus" = "light")),   # "Mörk" = "dark" borttaget
       shiny::tags$hr(style = "margin: 8px 0;"),
       radioButtons("rutter_delad", "Visa rutter",
                    choices = val_choices, selected = val_choices[1]),
@@ -699,19 +692,19 @@ shinyServer(function(input, output, session) {
       bslib::value_box(
         value = paste0(arbete_pct, "%"),
         title = NULL,
-        "av sysselsatta når sin arbetsplats inom 15 min med cykel",
+        "av sysselsatta kan nå sin arbetsplats inom 15 min med cykel på det cykelbara vägnätet",
         theme = vardevbox_tema
       ),
       bslib::value_box(
         value = paste0(grundskola_pct, "%"),
         title = NULL,
-        "av grundskoleelever når sin skola inom 2 km med cykel",
+        "av grundskoleelever kan nå sin skola inom 2 km med cykel på det cykelbara vägnätet",
         theme = vardevbox_tema
       ),
       bslib::value_box(
         value = paste0(gymnasium_pct, "%"),
         title = NULL,
-        "av gymnasieelever når sin skola inom 15 min med cykel",
+        "av gymnasieelever kan nå sin skola inom 15 min med cykel på det cykelbara vägnätet",
         theme = vardevbox_tema
       )
     )

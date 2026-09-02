@@ -255,7 +255,9 @@ start_panel_ui <- function() {
           "Ruttanalyserna som ligger till grund för cykelpotentialen har gjorts på antingen",
           "hela vägnätet eller på ett urval av vägnätet som bedömts vara mer eller mindre",
           "cykelbart. Vägnätet har klassificerats i cykelklasserna B1, B2, B3, B4, B5,",
-          "C1, C2, C3, G1 och G2."
+          "C1, C2, C3, G1 och G2. Begreppet cykelbarhet avser här endast",
+          "analysens definition av vilka vägar som bedömts som cykelbara.",
+          "Faktisk cykelbarhet kan variera beroende på individuella förutsättningar och lokala förhållanden."
         )),
         p(paste(
           "Cykelklassningen baseras på ett antal variabler i NVDB som väglänkens slitlager,",
