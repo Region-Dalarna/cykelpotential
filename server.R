@@ -457,6 +457,11 @@ shinyServer(function(input, output, session) {
 
     session$sendCustomMessage("show-spinner", list(n = kd$n))
 
+    pal_legend <- colorNumeric(
+      palette = viridis::viridis(10, option = "plasma", direction = -1),
+      domain  = c(0, 100)
+    )
+
     leafletProxy("delad_karta") %>%
       clearGroup("vagnat") %>%
       clearControls() %>%
@@ -465,7 +470,9 @@ shinyServer(function(input, output, session) {
         geojson = kd$geojson,
         group   = "vagnat",
         layerId = kd$lank_ids
-      )
+      ) %>%
+      addLegend(pal = pal_legend, values = c(0, 100),
+                position = "bottomright", title = "Antal passager")
   })
 
   # Bygg popup endast för de vägsegment man klickar på.
