@@ -357,7 +357,7 @@ shinyServer(function(input, output, session) {
     req(aktuell_tabb_id(), aktuellt_val())
 
     rad <- dbGetQuery(con_rutt, "
-      SELECT geojson, antal_segment, lank_ids
+      SELECT geojson, antal_segment, lank_ids, min_varde, max_varde
       FROM app_cache.geojson_cache
       WHERE tabb_id = $1 AND rutter_val = $2;
     ", params = list(aktuell_tabb_id(), aktuellt_val()))
@@ -365,9 +365,11 @@ shinyServer(function(input, output, session) {
     req(nrow(rad) > 0)
 
     list(
-      geojson  = rad$geojson[1],
-      n        = rad$antal_segment[1],
-      lank_ids = strsplit(rad$lank_ids[1], ",")[[1]]
+      geojson   = rad$geojson[1],
+      n         = rad$antal_segment[1],
+      lank_ids  = strsplit(rad$lank_ids[1], ",")[[1]],
+      min_varde = rad$min_varde[1],
+      max_varde = rad$max_varde[1]
     )
   }) %>% bindCache(aktuell_tabb_id(), aktuellt_val())
 
@@ -440,7 +442,24 @@ shinyServer(function(input, output, session) {
         fillColor = "transparent", fillOpacity = 0, weight = 1, color = "black",
         options = pathOptions(interactive = FALSE)
       ) %>%
-      hideGroup("kommuner")
+      addCircleMarkers(
+        data        = tatorter,
+        group       = "tatorter",
+        radius      = 4,
+        color       = "cornflowerblue",
+        fillColor   = "cornflowerblue",
+        fillOpacity = 0.9,
+        weight      = 1.5,
+        label       = ~lapply(tatort, htmltools::HTML),
+        labelOptions = leaflet::labelOptions(
+          direction = "auto",
+          textsize  = "12px",
+          style     = list("font-family" = "inherit", "padding" = "4px 8px")
+        ),
+        options     = pathOptions(interactive = TRUE)
+      ) %>%
+      hideGroup("kommuner") %>%
+      hideGroup("tatorter")
   })
 
   # ---- Delad karta: byt bakgrund utan att röra rutter/zoom ----
@@ -459,7 +478,7 @@ shinyServer(function(input, output, session) {
 
     pal_legend <- colorNumeric(
       palette = viridis::viridis(10, option = "plasma", direction = -1),
-      domain  = c(0, 100)
+      domain  = c(kd$min_varde, kd$max_varde)
     )
 
     leafletProxy("delad_karta") %>%
@@ -469,9 +488,10 @@ shinyServer(function(input, output, session) {
       addGeoJSON(
         geojson = kd$geojson,
         group   = "vagnat",
-        layerId = kd$lank_ids
+        layerId = kd$lank_ids,
+        fill    = FALSE
       ) %>%
-      addLegend(pal = pal_legend, values = c(0, 100),
+      addLegend(pal = pal_legend, values = c(kd$min_varde, kd$max_varde),
                 position = "bottomright", title = "Antal passager")
   })
 
@@ -517,6 +537,16 @@ shinyServer(function(input, output, session) {
     }
   }, ignoreInit = TRUE)
 
+  # ---- Delad karta: visa/dölj tätorter ----
+  observeEvent(input$visa_tatorter, {
+    proxy <- leafletProxy("delad_karta")
+    if (isTRUE(input$visa_tatorter)) {
+      proxy %>% showGroup("tatorter")
+    } else {
+      proxy %>% hideGroup("tatorter")
+    }
+  }, ignoreInit = TRUE)
+
   # ---- Kontrollpanel: radiobuttons per flik ----
   output$map_controls_ui <- renderUI({
     req(input$nav)
@@ -535,12 +565,13 @@ shinyServer(function(input, output, session) {
 
     tagList(
       radioButtons("basemap_delad", "Kartbakgrund",
-                   choices = c("Ljus" = "light")),   # "Mörk" = "dark" borttaget
+                   choices = c("Ljus" = "light")),
       shiny::tags$hr(style = "margin: 8px 0;"),
       radioButtons("rutter_delad", "Visa rutter",
                    choices = val_choices, selected = val_choices[1]),
       shiny::tags$hr(style = "margin: 8px 0;"),
-      checkboxInput("visa_kommungranser", "Kommungränser", value = FALSE)
+      checkboxInput("visa_kommungranser", "Kommungränser", value = FALSE),
+      checkboxInput("visa_tatorter", "Tätorter", value = FALSE)
     )
   })
 
