@@ -135,6 +135,19 @@ arbete_nvdb_stat <- tbl(
 #----Hämta geografiska gränser----
 con <- shiny_uppkoppling_las("geodata")
 
+# Tätorter
+tatorter <- tbl(
+  con,
+  dbplyr::in_schema("karta", "tatortspunkter")
+) %>%
+  filter(lan == "20") %>%
+  collect() %>%
+  df_till_sf() %>%
+  st_transform(4326) %>%
+  st_zm(drop = TRUE, what = "ZM")
+
+
+
 # Kommuner
 kommuner <- tbl(
   con,
