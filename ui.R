@@ -298,7 +298,23 @@ start_panel_ui <- function() {
 
       p(
         class = "source-note",
-        HTML("Cykelklassningen har utgått från Tyréns modell och Trafikverkets rapport <i>Cykelkleder för rekreation och turism</i>.")
+        "Cykelklassningen är framarbetad med stöd i denna ",
+        tags$i(
+          tags$a(
+            href = "https://www.diva-portal.org/smash/record.jsf?pid=diva2%3A2003569&dswid=-6569",
+            "rapport kring cykelbarhetsklassificering",
+            target = "_blank"
+          )
+        ),
+        "och Trafikverkets rapport ",
+        tags$i(
+          tags$a(
+            href = "https://bransch.trafikverket.se/for-dig-i-branschen/Planera-och-utreda/samhallsplanering/planera-for-transporter-i-samhallsplaneringen/Personresor/cykel-i-samhallsplaneringen/Cykelleder-for-rekreation-och-turism/",
+            "Cykelleder för rekreation och turism",
+            target = "_blank"
+          )
+        ),
+        "."
       )
     )
   )
@@ -306,55 +322,174 @@ start_panel_ui <- function() {
 
 
 # ------------------------------------------------------------------
-# Om-sida
+# Om metoden (sista fliken). value = "om" måste behållas: conditionalPanel,
+# expand.js och server.R använder "om" för att dölja den delade kartan.
 # ------------------------------------------------------------------
-# om_panel_ui <- function() {
-#   bslib::nav_panel(
-#     title = "Om",
-#     value = "om",
-#
-#     shiny::div(
-#       id = "om_hero",
-#
-#       h2("Vad är cykelpotential?"),
-#       p(
-#         class = "lead-in",
-#         paste(
-#           "Cykelpotentialen visar hur många invånare i Dalarnas län som skulle kunna nå",
-#           "sin skola eller arbetsplats med cykel eller elcykel inom en given tid eller ett",
-#           "givet avstånd, om de cyklade den kortaste möjliga vägen. Måttet bygger på",
-#           "faktiska avstånd och restider i vägnätet — inte på hur människor faktiskt",
-#           "reser idag."
-#         )
-#       ),
-#       p(
-#         class = "text-box",
-#         HTML(paste0(
-#           "Cykelpotentialen är alltså en <b>möjlighetsanalys</b>, inte en pendlingsstatistik: ",
-#           "den visar var förutsättningarna för cykling redan är goda, och var infrastrukturen ",
-#           "sätter gränser för vad som är realistiskt."
-#         ))
-#       ),
-#
-#       h2("Varför har rapporten tagits fram?"),
-#       shiny::div(
-#         class = "text-box",
-#         p("Den här analysen ger ett gemensamt underlag för att:"),
-#         shiny::tags$ul(
-#           class = "om-lista",
-#           shiny::tags$li("identifiera var satsningar på cykelinfrastruktur skulle göra störst skillnad,"),
-#           shiny::tags$li("följa upp hur förändringar i vägnätet (nya cykelvägar, uppgraderad standard) påverkar tillgängligheten över tid,"),
-#           shiny::tags$li("skilja på potentialen längs hela vägnätet och den mer försiktiga bilden man får om man bara räknar utpekat cykelbara vägar.")
-#         ),
-#         p(paste(
-#           "Genom att beräkna potentialen både för hela vägnätet och för ett urval av",
-#           "cykelklassade vägar blir det tydligt var bristande infrastruktur — snarare",
-#           "än avstånd i sig — är det som begränsar cyklingen."
-#         ))
-#       )
-#     )
-#   )
-# }
+om_panel_ui <- function() {
+  bslib::nav_panel(
+    title = "Om metoden",
+    value = "om",
+
+    div(
+      id = "om_hero",
+
+      h2("Om metoden"),
+      p(
+        class = "lead-in",
+        paste(
+          "Här beskrivs kort hur cykelpotentialen har beräknats och var du kan vända dig med frågor."
+        )
+      ),
+
+      h2("Så är analysen gjord"),
+      div(
+        class = "text-box",
+        shiny::tags$ol(
+          class = "om-lista",
+          shiny::tags$li(paste(
+            "Utgångspunkten är SCB:s data om var befolkningen bor och var de går i skola",
+            "eller arbetar."
+          )),
+          shiny::tags$li(paste(
+            "Vägnätet kommer från NVDB. Varje väglänk har klassats efter hur lämplig den är",
+            "att cykla på, utifrån bland annat hastighet, trafikmängd, vägtyp, underlag",
+            "och väghållare."
+          )),
+          shiny::tags$li(paste(
+            "För varje relation mellan bostad och skola eller arbetsplats beräknas den",
+            "kortaste vägen i vägnätet."
+          )),
+          shiny::tags$li(paste(
+            "Rutterna som ryms inom vald tids- eller avståndsgräns räknas samman till antal",
+            "potentiella passager per väglänk, och till andelar per kommun och DeSO."
+          )),
+          shiny::tags$li(paste(
+            "Väglänkar där enstaka resenärer skulle kunna identifieras döljs",
+            "(se frågan om sekretess nedan)."
+          ))
+        )
+      ),
+
+      h2("Frågor och svar"),
+      bslib::accordion(
+        open = FALSE,
+
+        bslib::accordion_panel(
+          title = "Visar resultatet hur många som faktiskt cyklar?",
+          paste(
+            "Nej. Cykelpotentialen är en möjlighetsanalys: den visar hur många som skulle",
+            "kunna nå sitt mål med cykel eller elcykel inom en viss tid eller ett visst",
+            "avstånd, givet att de väljer den kortaste vägen. Den visar var förutsättningarna",
+            "är goda och var vägnätet sätter gränser, inte hur människor reser idag."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Vad är skillnaden mellan Cykelbara vägar och Alla vägar?",
+          paste(
+            "Under Alla vägar får rutterna använda hela vägnätet. Under Cykelbara vägar får",
+            "de bara använda ett urval av vägklasser som bedömts som lämpliga att cykla på,",
+            "och vägar med hög hastighet eller mycket trafik är bortsorterade. Jämförelsen",
+            "visar hur mycket av potentialen som beror på vägarnas utformning snarare än",
+            "på avståndet."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Vilka hastigheter har antagits?",
+          paste(
+            "Schablonhastigheter: 10 km/h för skolelever, och för arbetspendling 16 km/h med",
+            "cykel och 22 km/h med elcykel. Cykel och elcykel får samma rutt, bara restiden",
+            "skiljer. Grundskolans gränser anges i avstånd (2, 3 och 5 km), övriga i tid",
+            "(15, 30 och 45 minuter)."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Vad är en passage?",
+          paste(
+            "Antalet personer vars kortaste rutt, inom vald gräns, går över väglänken.",
+            "Varje person räknas högst en gång per länk. Siffran visar alltså hur många som",
+            "potentiellt skulle kunna använda länken, inte hur många som gör det."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Hur räknas andelarna i diagram och kommunkartor?",
+          paste(
+            "Andelen är antalet personer som når målet inom gränsen, delat med alla personer",
+            "i området. De som inte får någon rutt ingår i nämnaren. Diagrammen och kommunkartorna påverkas inte av att enskilda",
+            "väglänkar döljs på den delade kartan."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Varför döljs vissa vägavsnitt på kartan? (sekretess)",
+          tagList(
+            p(paste(
+              "Visas en väglänk med mycket få resenärer som leder fram till en enskild start-",
+              "eller målpunkt, till exempel en återvändsgata, kan man ibland räkna ut vilka",
+              "som bor eller arbetar där. Därför döljs sådana länkar."
+            )),
+            p(paste(
+              "Det görs stegvis: en länk i en återvändsgränd med färre än 10 passager döljs,",
+              "och om nästa länk i kedjan då också har färre än 10 döljs även den. Så fortsätter",
+              "det tills en länk med minst 10 passager nås, som får synas. Därtill kan en",
+              "angränsande länk med färre än 19 passager döljas, eftersom skillnaden mot den",
+              "dolda länken annars kan vara mycket liten."
+            )),
+            p(paste(
+              "Länkar mitt i ett sammanhängande nät döljs inte bara för att få resenärer",
+              "passerar där. Metoden är egenutvecklad och tillämpas för varje karta för sig,",
+              "så en länk kan vara synlig på en karta och dold på en annan."
+            ))
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Varför saknas rutter fram till en skola eller arbetsplats som ligger nära bostäder?",
+          paste(
+            "Under Cykelbara vägar används bara vägar som klassats som lämpliga. Om den enda",
+            "förbindelsen till en skola eller arbetsplats går via en väg som inte klassats så,",
+            "hittas ingen rutt och antalet passager blir noll, även om målet ligger nära",
+            "bostäderna. Jämför med fliken Alla vägar. Skillnaden kan peka på en brist i",
+            "vägnätet, men också på att en väg klassats för strängt."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Hur tillförlitlig är klassningen av vägarna?",
+          paste(
+            "Klassningen bygger på uppgifter i NVDB och är känslig både för var gränsvärdena",
+            "dras och för hur uppgifterna har rapporterats in. Den ger en bra bild på regional",
+            "nivå, men enskilda väglänkar kan vara felklassade. Lokalkännedom är värdefull",
+            "för att hitta sådana fel."
+          )
+        ),
+
+        bslib::accordion_panel(
+          title = "Vad tas inte hänsyn till?",
+          paste(
+            "Bland annat lutning, korsningar och passager, väder och årstid, belysning och underhåll,",
+            "samt hur trygg eller trevlig en väg upplevs."
+          )
+        )
+      ),
+
+      h2("Frågor och synpunkter"),
+      div(
+        class = "text-box",
+        p(
+          "Kontakta Region Dalarna, Samhällsanalys: ",
+          shiny::tags$a(
+            href = "mailto:samhallsanalys@regiondalarna.se",
+            "samhallsanalys@regiondalarna.se"
+          )
+        )
+      )
+    )
+  )
+}
 
 
 # ------------------------------------------------------------------
@@ -404,8 +539,8 @@ shinyUI(
           c(
             list(id = "nav"),
             list(start_panel_ui()),
-            bygg_nav_menyer(panel_konfig)
-            # list(om_panel_ui())
+            bygg_nav_menyer(panel_konfig),
+            list(om_panel_ui())
           )
         )
       ),

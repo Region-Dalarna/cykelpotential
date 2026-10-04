@@ -19,7 +19,12 @@
   $(document).on("shiny:inputchanged", function (event) {
     if (event.name === "nav") {
       rdUpdateMapLayout(event.value);
-      visaSpinnerDirekt();
+      if (event.value === "start" || event.value === "om") {
+        // Ingen kartdata laddas på dessa flikar, så spinnern ska inte visas alls
+        $("#app_spinner_overlay").removeClass("show");
+      } else {
+        visaSpinnerDirekt();
+      }
     }
   });
 
