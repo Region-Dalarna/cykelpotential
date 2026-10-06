@@ -260,7 +260,7 @@ start_panel_ui <- function() {
           "Faktisk cykelbarhet kan variera beroende på individuella förutsättningar och lokala förhållanden."
         )),
         p(paste(
-          "Cykelklassningen baseras på ett antal variabler i NVDB som väglänkens slitlager,",
+          "Cykelklassningen baseras på ett antal variabler i NVDB (Nationella vägdatabasen) som väglänkens slitlager,",
           "hastighet, vägtyp, årsmedelsdygnstrafik, bredd samt väghållare."
         )),
         p(paste(
@@ -351,7 +351,7 @@ om_panel_ui <- function() {
             "eller arbetar."
           )),
           shiny::tags$li(paste(
-            "Vägnätet kommer från NVDB. Varje väglänk har klassats efter hur lämplig den är",
+            "Vägnätet kommer från NVDB (Nationella vägdatabasen). Varje väglänk har klassats efter hur lämplig den är",
             "att cykla på, utifrån bland annat hastighet, trafikmängd, vägtyp, underlag",
             "och väghållare."
           )),
