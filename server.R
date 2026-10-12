@@ -124,7 +124,7 @@ berakna_lanssnitt <- function(cykel_data, varde_kol, granser, skolform = NULL) {
 startsida_stat <- function(cykel_data, varde_kol, granser, grans, skolform = NULL) {
   lans      <- berakna_lanssnitt(cykel_data, varde_kol, granser, skolform)
   huvud_kol <- paste0("andel_", grans)
-  round(lans[[huvud_kol]] * 100, 0)
+  round(lans[[huvud_kol]] * 100, 1)
 }
 # ------------------------------------------------------------------
 # Generisk barplot

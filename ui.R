@@ -375,6 +375,22 @@ om_panel_ui <- function() {
         open = FALSE,
 
         bslib::accordion_panel(
+          title = "Vilka består urvalet i analysen av?",
+          tagList(
+            p(paste(
+              "Urvalet i analysen baseras på SCB:s registerdata över var befolkningen bor och var de arbetar eller går i skola.",
+              "Urvalet som ligger till grund för analysen är något mindre än den totala befolkningen som är sysselsatt eller studerar.",
+              "Det beror på tre filtreringar:"
+            )),
+            tags$ol(
+              tags$li("Observationer där bostadens eller målpunktens koordinater saknas eller är ogiltiga har tagits bort."),
+              tags$li("Observationer där bostad och målpunkt ligger i samma ruta har tagits bort, eftersom ingen pendling sker."),
+              tags$li("Observationer där bostaden eller målpunkten ligger mer än 5 km utanför Dalarnas län har tagits bort.")
+            )
+          )
+        ),
+
+        bslib::accordion_panel(
           title = "Visar resultatet hur många som faktiskt cyklar?",
           paste(
             "Nej. Cykelpotentialen är en möjlighetsanalys: den visar hur många som skulle",
