@@ -321,6 +321,7 @@ bind_kommunkarta_deso <- function(map_id, cykel_data, deso_niva, input, session,
 # SERVER
 # =============================================================
 shinyServer(function(input, output, session) {
+  rdshinyappar::telemetri_server(telemetry, navigation_id = "nav", forsta_flik = "Start")
 
   thematic::thematic_shiny()
 

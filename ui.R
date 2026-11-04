@@ -4,6 +4,8 @@
 
 source('global.R')
 
+APP_BESKRIVNING <- 'Visar hur många som skulle kunna cykla eller elcykla till skola eller arbete inom valda tids- och avståndsgränser i Dalarnas län.'
+
 # ------------------------------------------------------------------
 # Konfiguration för alla analysflikar
 # (single source of truth – lägg till/ta bort flikar här)
@@ -523,7 +525,8 @@ shinyUI(
       shiny::tags$link(
         rel  = 'stylesheet',
         href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'
-      )
+      ),
+      telemetri_ui(telemetry)
     ),
 
     # ---- Global spinner-overlay ----------------------------------------
@@ -541,8 +544,7 @@ shinyUI(
         class  = 'rd-header__right',
         href   = 'https://www.regiondalarna.se',
         target = '_blank',
-        shiny::tags$img(src = 'logo_liggande_fri_vit.png', alt = 'Region Dalarna'),
-        shiny::tags$span('Samhällsanalys')
+        shiny::tags$img(src = 'logo_liggande_fri_vit.png', alt = 'Region Dalarna')
       )
     ),
 
