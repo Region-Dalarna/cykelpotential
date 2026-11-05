@@ -6,6 +6,8 @@ source('global.R')
 
 APP_BESKRIVNING <- 'Visar hur många som skulle kunna cykla eller elcykla till skola eller arbete inom valda tids- och avståndsgränser i Dalarnas län.'
 
+APP_TITEL <- 'Cykelpotential'
+
 # ------------------------------------------------------------------
 # Konfiguration för alla analysflikar
 # (single source of truth – lägg till/ta bort flikar här)
@@ -515,6 +517,7 @@ om_panel_ui <- function() {
 # ------------------------------------------------------------------
 shinyUI(
   fluidPage(
+    title = APP_TITEL,  # webbläsarflikens rubrik
     theme = bslib::bs_theme(version = 5),
 
     shiny::tags$head(
@@ -539,7 +542,7 @@ shinyUI(
     # ---- Header (matchar .rd-header i regiondalarna_ruf.css) --------------
     shiny::tags$div(
       class = 'rd-header',
-      shiny::tags$div(class = 'rd-header__title', 'Cykelpotential'),
+      shiny::tags$div(class = 'rd-header__title', APP_TITEL),
       shiny::tags$a(
         class  = 'rd-header__right',
         href   = 'https://www.regiondalarna.se',
