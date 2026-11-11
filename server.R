@@ -390,7 +390,7 @@ shinyServer(function(input, output, session) {
     )
 
     leaflet() %>%
-      addProviderTiles(providers$Esri.WorldGrayCanvas) %>%
+      lagg_till_bakgrundskarta() %>%
       setView(lng = 14.0, lat = 61.5, zoom = 7) %>%
       htmlwidgets::onRender("
         function(el, x) {
@@ -463,12 +463,10 @@ shinyServer(function(input, output, session) {
       hideGroup("tatorter")
   })
 
-  # ---- Delad karta: byt bakgrund utan att röra rutter/zoom ----
-  observeEvent(input$basemap_delad, {
-    leafletProxy("delad_karta") %>%
-      clearTiles() %>%
-      addProviderTiles(providers$Esri.WorldGrayCanvas)
-  }, ignoreInit = TRUE)
+  # ---- Delad karta: bakgrunden ----
+  # Bakgrunden (lagg_till_bakgrundskarta(), OpenFreeMap) läggs till när kartan ritas och kan inte bytas via
+  # leafletProxy() (clearTiles() tar inte bort den). Kartbakgrunden har bara valet "Ljus" i dag, så ingen
+  # växling behövs. Läggs fler val till måste kartan ritas om (renderLeaflet) när valet ändras.
 
   # ---- Delad karta: uppdatera vid flikbyte / val ----
   observe({
