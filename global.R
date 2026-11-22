@@ -24,8 +24,9 @@ library(rdshinyappar)
 # ---- Telemetri (användningsstatistik, se Adminportalen) --------------------
 telemetry <- skapa_telemetry("cykelpotential")
 
-# Allmänna options - TRUE = visa inte R-felmeddelanden i appen, FALSE = visa felmeddelanden från R på webben
-options(shiny.sanitize.errors = FALSE)
+# Felmeddelanden: på servern visas inga R-fel för användaren (sanitize = TRUE); felet skrivs ändå till appens logg
+# (se Adminportalen, Driftstatus - Loggar). Lokalt i RStudio visas felen i klartext för att underlätta felsökning.
+options(shiny.sanitize.errors = !interactive())
 # shinyOptions(cache = cachem::cache_disk(
 #   dir      = "C:/sti/till/en/cache-mapp",  # anpassa till  servermiljö
 #   max_size = 500 * 1024^2                   # 500 MB, justera efter behov
